@@ -95,13 +95,21 @@ const main = async () => {
 
     const deliverResults = async() => {
         await new Promise(async(resolve, reject) => {
+
+            console.log('=== time zone: ' + (new Date().toTimeString().slice(9)) + ' ===');
+            console.log('=== time zone name: ' + (Intl.DateTimeFormat().resolvedOptions().timeZone) + ' ===');
+            console.log('=== UTC offset: ' + (new Date().getTimezoneOffset() / -60) + ' ===');
+
+            let offset = new Date().getTimezoneOffset() / -60;
+
             let opts = {
                     url: pulseUri,
                     json: true,
                     body: {
                         'projectId': projectId,
                         'testcycle': cycleId,
-                        'result': encodedResults
+                        'result': encodedResults,
+                        'offset': offset
                     }
                 };
             // perform the post
