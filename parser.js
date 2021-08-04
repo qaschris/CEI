@@ -13,7 +13,7 @@ exports.handler = async function({
         return t && new Webhooks().invoke(t, payload);
     }
 
-    function convertDate(date) {
+    function convertDate(date, offset) {
         let splitDate = date.split('-');
         let months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
         let month = splitDate[1].toLowerCase();
@@ -21,9 +21,10 @@ exports.handler = async function({
         month = months.indexOf(month) + 1;
         console.log('[DEBUG]: Numeric value of Month: ' + month);
         splitDate.splice(1, 1, month);
-        let newDate = splitDate.join('-');
-        console.log('[DEBUG]: New date value: ' + newDate);
-        newDate = new Date(newDate).toISOString();
+        let newDate = new Date(splitDate.join('-'));
+        newDate.setHours(newDate.getHours() - offset);
+        console.log('[DEBUG]: New date value with timezone adjustment: ' + newDate);
+        newDate = newDate.toISOString();
         console.log('[INFO]: Date converted to: ' + newDate);
         return newDate;
     }
@@ -31,6 +32,7 @@ exports.handler = async function({
     var payload = body;
     var projectId = payload.projectId;
     var cycleId = payload.testcycle;
+    var offset = payload.offset;
 
     let testResults = Buffer.from(payload.result, 'base64').toString('ascii');
     //console.log('[DEBUG]: Results retrieved: \r\n' + testResults);
@@ -55,8 +57,8 @@ exports.handler = async function({
             let currentExecutionStatus = data[3];
             let currentStepName = data[4];
             let currentStepDescription = data[5];
-            let currentStartTime = convertDate(data[6]);
-            let currentEndTime = convertDate(data[7]);
+            let currentStartTime = convertDate(data[6], offset);
+            let currentEndTime = convertDate(data[7], offset);
 
             if (currentTestCaseName == previousTestCaseName) {
                 // continue test case
