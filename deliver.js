@@ -33,11 +33,11 @@ const main = async () => {
     const readFileAsync = util.promisify(fs.readFile);
     const statAsync = util.promisify(fs.stat);
     
-    const pulseUri = 'https://pulse-us-east-1.qtestnet.com/webhook/7c102b40-228f-461f-b11c-239d1f174d30';                // Pulse parser webhook endpoint
-    const projectId = '74528';               // target qTest Project ID
-    const cycleId = '7184713';                 // target qTest Test Cycle ID
-    let resultsPath = 'C:\\repo\\- Customer Specific -\\Cox\\CSVReportGeneration';      // Edit this to reflect your results file, be certain to escape the slashes as seen below.
-    let archivePath = 'C:\\repo\\- Customer Specific -\\Cox\\CSVReportGeneration\\Archive';
+    const pulseUri = '';                // Pulse parser webhook endpoint
+    const projectId = '';               // target qTest Project ID
+    const cycleId = '';                 // target qTest Test Cycle ID
+    let resultsPath = '\\CSVReportGeneration';      // Edit this to reflect your results file, be certain to escape the slashes as seen below.
+    let archivePath = '\\CSVReportGeneration\\Archive';
     let resultSuffix = '.csv';
     
     let filename;
@@ -109,6 +109,7 @@ const main = async () => {
                         'projectId': projectId,
                         'testcycle': cycleId,
                         'result': encodedResults,
+                        'filename': filename,
                         'offset': offset
                     }
                 };
