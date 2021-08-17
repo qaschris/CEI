@@ -32,6 +32,7 @@ exports.handler = async function({
     var payload = body;
     var projectId = payload.projectId;
     var cycleId = payload.testcycle;
+    var filename = payload.filename;
     var offset = payload.offset;
 
     let testResults = Buffer.from(payload.result, 'base64').toString('ascii');
@@ -44,23 +45,35 @@ exports.handler = async function({
     let reportingLog;
     let testStepLogs = [];;
     let stepLog;
+    let data;
     let previousTestCaseName = '';
+    let currentModuleName;
+    let currentTestCaseName;
+    let currentStepNumber;
+    let currentExecutionStatus;
+    let currentStepName;
+    let currentStepDescription;
+    let currentStartTime;
+    let currentEndTime;
+    let corruptRecordFlag = false;
 
+    console.log('[INFO]: Processing file: ' + filename);
     for (let l = 1; l < allCsvLines.length; l++) {
-        console.log('[DEBUG]: Current line: ' + (l + 1) + ' - ' + allCsvLines[l]);
-        let data = allCsvLines[l].split(',');
-        console.log('[DEBUG]: Current line record length: ' + data.length);
+        data = allCsvLines[l].split(',');
+        console.log('[INFO]: Current line: ' + (l + 1) + ' - ' + allCsvLines[l] + ' Record length: ' + data.length);
         if (data.length == headers.length) {
-            let currentModuleName = data[0];
-            let currentTestCaseName = data[1];
-            let currentStepNumber = data[2];
-            let currentExecutionStatus = data[3];
-            let currentStepName = data[4];
-            let currentStepDescription = data[5];
-            let currentStartTime = convertDate(data[6], offset);
-            let currentEndTime = convertDate(data[7], offset);
+            currentModuleName = data[0];
+            currentTestCaseName = data[1];
+            currentStepNumber = data[2];
+            currentExecutionStatus = data[3];
+            currentStepName = data[4];
+            currentStepDescription = data[5];
+            currentStartTime = convertDate(data[6], offset);
+            currentEndTime = convertDate(data[7], offset);
 
-            if (currentTestCaseName == previousTestCaseName) {
+            if (corruptRecordFlag == true && currentTestCaseName == previousTestCaseName) {
+                console.log('[INFO]: Row is part of corrupted record, skipping to next.');
+            } else if (corruptRecordFlag == false && currentTestCaseName == previousTestCaseName) {
                 // continue test case
                 console.log('[INFO]: Test Case Name ' + currentTestCaseName + ' is same as last, continuing with test steps.')
                 reportingLog.status = currentExecutionStatus;
@@ -81,11 +94,15 @@ exports.handler = async function({
             } else {
                 // new test case
                 console.log('[INFO]: Test Case Name ' + currentTestCaseName + ' is new, beginning new test case.')
-                if (previousTestCaseName !== '') {
+                if (corruptRecordFlag == false && previousTestCaseName !== '') {
                     // push the completed test steps and test case to the collection
                     reportingLog.test_step_logs = testStepLogs;
                     testLogs.push(reportingLog);
+                } else if (corruptRecordFlag == true && previousTestCaseName !== '') {
+                    // push the completed test steps and test case to the collection
+                    corruptRecordFlag = false;
                 }
+
 
                 reportingLog = {
                     status: currentExecutionStatus,
@@ -116,10 +133,10 @@ exports.handler = async function({
             }
 
         } else {
-            console.log('[ERROR]: CSV content on row ' + l + ' does not have the same number of columns as the header row.');
-            return '[ERROR]: CSV content on row ' + l + ' does not have the same number of columns as the header row.';
+            console.log('[ERROR]: CSV content of file ' + filename + ' on row ' + (l + 1) + ' does not have the same number of columns as the header row, skipping to next record.');
+            emitEvent('ChatOpsEvent', {message: '[ERROR]: CSV content of file ' + filename + ' on row ' + (l + 1) + ' does not have the same number of columns as the header row, skipping to next record.'});
+            corruptRecordFlag = 'true';
         }
-
     }
 
     let formattedResults = {
