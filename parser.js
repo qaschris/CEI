@@ -145,5 +145,5 @@ exports.handler = async function({
         "logs": testLogs
     };
 
-    emitEvent('UpdateQTestWithFormattedResults', formattedResults);
+    emitEvent('Upload2qTest', formattedResults);
 }
