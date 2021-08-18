@@ -15,7 +15,7 @@ exports.handler = async function({
 
     function convertDate(date, offset) {
         let splitDate = date.split('-');
-        let months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+        let months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
         let month = splitDate[1].toLowerCase();
         console.log('[INFO]: Converting date from: ' + month);
         month = months.indexOf(month) + 1;
@@ -141,11 +141,15 @@ exports.handler = async function({
             corruptRecordFlag = true;
         }
     }
+    // push the completed test steps and test case for the last record to the collection
+    reportingLog.test_step_logs = testStepLogs;
+    testLogs.push(reportingLog);
 
     let formattedResults = {
-        "projectId": projectId,
-        "testcycle": cycleId,
-        "logs": testLogs
+        'projectId': projectId,
+        'testcycle': cycleId,
+        'filename': filename,
+        'logs': testLogs
     };
 
     emitEvent('Upload2qTest', formattedResults);
