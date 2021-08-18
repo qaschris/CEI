@@ -37,6 +37,8 @@ exports.handler = async function({
 
     let testResults = Buffer.from(payload.result, 'base64').toString('ascii');
     //console.log('[DEBUG]: Results retrieved: \r\n' + testResults);
+    console.log('[INFO]: Processing file: ' + filename);
+    emitEvent('ChatOpsEvent', {message: '[INFO]: Processing file: ' + filename });
 
     let allCsvLines = testResults.trim().split(/\r\n|\n/);
     let headers = allCsvLines[0].split(',');
@@ -75,7 +77,7 @@ exports.handler = async function({
                 console.log('[INFO]: Row is part of corrupted record, skipping to next.');
             } else if (corruptRecordFlag == false && currentTestCaseName == previousTestCaseName) {
                 // continue test case
-                console.log('[INFO]: Test Case Name ' + currentTestCaseName + ' is same as last, continuing with test steps.')
+                console.log('[INFO]: Test Case Name ' + currentTestCaseName + ' is same as last, continuing with test steps.');
                 reportingLog.status = currentExecutionStatus;
                 reportingLog.exe_end_date = currentEndTime;
 
@@ -93,13 +95,14 @@ exports.handler = async function({
 
             } else {
                 // new test case
-                console.log('[INFO]: Test Case Name ' + currentTestCaseName + ' is new, beginning new test case.')
                 if (corruptRecordFlag == false && previousTestCaseName !== '') {
+                    console.log('[INFO]: Test Case Name ' + currentTestCaseName + ' is new, beginning new test case.');
                     // push the completed test steps and test case to the collection
                     reportingLog.test_step_logs = testStepLogs;
                     testLogs.push(reportingLog);
                 } else if (corruptRecordFlag == true && previousTestCaseName !== '') {
-                    // push the completed test steps and test case to the collection
+                    // skip all test steps that are part of the corrupted record
+                    console.log('[INFO]: Test Case Name ' + currentTestCaseName + ' is new, beginning new test case and resetting corrupt record flag.');
                     corruptRecordFlag = false;
                 }
 
@@ -135,7 +138,7 @@ exports.handler = async function({
         } else {
             console.log('[ERROR]: CSV content of file ' + filename + ' on row ' + (l + 1) + ' does not have the same number of columns as the header row, skipping to next record.');
             emitEvent('ChatOpsEvent', {message: '[ERROR]: CSV content of file ' + filename + ' on row ' + (l + 1) + ' does not have the same number of columns as the header row, skipping to next record.'});
-            corruptRecordFlag = 'true';
+            corruptRecordFlag = true;
         }
     }
 
