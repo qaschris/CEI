@@ -74,6 +74,7 @@ exports.handler = function ({ event: body, constants, triggers }, context, callb
     var testLogs = payload.logs;
     var cycleId = payload.testcycle;
     var projectId = payload.projectId;
+    var filename = payload.filename;
     var queueStatus = 'IN_WAITING'; // IN_WAITING, IN_PROCESSING, FAILED, PENDING and SUCCESS
     var queueId = 0;
 
@@ -103,15 +104,15 @@ exports.handler = function ({ event: body, constants, triggers }, context, callb
                 if (response.body.type == 'AUTOMATION_TEST_LOG') {
                   queueId = response.body.id;
                     Promise.resolve('Results queued successfully.');
-                    emitEvent('ChatOpsEvent', { message: '[INFO]: Results queued successfully for id: ' + resbody.id});
-                    console.log('[INFO]: Results queued successfully for id: ' + resbody.id);
+                    emitEvent('ChatOpsEvent', { message: '[INFO]: Results queued successfully for file: ' + filename + ' with id: ' + resbody.id});
+                    console.log('[INFO]: Results queued successfully for file: ' + filename + ' with id: ' + resbody.id);
                     checkQueueStatus(queueId);
 
                     //console.log('About to call Link Requirements Rule.');
                     //emitEvent('<INSERT NAME OF LINK SCENARIO REQUIREMENTS RULE HERE>', payload);
                 }
                 else {
-                    emitEvent('ChatOpsEvent', { message: 'Unable to upload test results.' });
+                    emitEvent('ChatOpsEvent', { message: 'Unable to upload test results for file: ' + filename });
                     Promise.reject('[ERROR]: Unable to upload test results.  See logs for details.');
                     emitEvent('ChatOpsEvent', { message: '[ERROR]: ' + JSON.stringify(resbody) });
                     console.log('[ERROR]: ' + JSON.stringify(resbody));
